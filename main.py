@@ -15,12 +15,16 @@ app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 ckeditor = CKEditor(app)
 Bootstrap5(app)
 
+
 # CREATE DATABASE
 class Base(DeclarativeBase):
     pass
+
+
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///posts.db'
 db = SQLAlchemy(model_class=Base)
 db.init_app(app)
+
 
 # CONFIGURE TABLE
 class BlogPost(db.Model):
@@ -49,6 +53,11 @@ def get_all_posts():
     result = db.session.execute(db.select(BlogPost))
     posts = result.scalars().all()
     return render_template("index.html", all_posts=posts)
+
+
+@app.route('/delete')
+def delete_post(title):
+    pass
 
 
 @app.route('/edit-post/<string:title>', methods=['GET', 'POST'])
@@ -94,12 +103,10 @@ def new_post():
 
 @app.route("/post/<string:title>")
 def show_post(title):
-    # Retrieve a BlogPost from the database based on the post_id
     requested_post = db.session.execute(db.select(BlogPost).where(BlogPost.title == title)).scalar()
     return render_template("post.html", post=requested_post)
 
 
-# Below is the code from previous lessons. No changes needed.
 @app.route("/about")
 def about():
     return render_template("about.html")
@@ -108,6 +115,16 @@ def about():
 @app.route("/contact")
 def contact():
     return render_template("contact.html")
+
+
+@app.route("/delete/<string:title>")
+def delete(title):
+    toDelete = db.session.execute(db.select(BlogPost).where(BlogPost.title == title)).scalar()
+    db.session.delete(toDelete)
+    db.session.commit()
+    return redirect(url_for("get_all_posts"))
+
+
 
 
 if __name__ == "__main__":
